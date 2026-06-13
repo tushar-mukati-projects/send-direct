@@ -1,0 +1,17 @@
+name = "send-direct-signaling"
+main = "src/index.ts"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Allowed browser origins (comma-separated). Includes localhost for `wrangler dev`.
+[vars]
+ALLOWED_ORIGINS = "https://send-direct.pages.dev,http://localhost:3000"
+
+[[durable_objects.bindings]]
+name = "SIGNAL_ROOM"
+class_name = "SignalRoom"
+
+# SQLite-backed Durable Object (eligible for the Workers free tier).
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SignalRoom"]
