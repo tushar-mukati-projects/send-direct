@@ -7,6 +7,17 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 ALLOWED_ORIGINS = "https://send-direct.pages.dev,http://localhost:3000"
 
+# Per-IP connection rate limit (60 upgrades / minute).
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 60, period = 60 }
+
+# Optional Cloudflare TURN (for strict/symmetric NATs). Set as secrets:
+#   wrangler secret put TURN_KEY_ID
+#   wrangler secret put TURN_KEY_API_TOKEN
+# Without them the /ice endpoint returns STUN only.
+
 [[durable_objects.bindings]]
 name = "SIGNAL_ROOM"
 class_name = "SignalRoom"

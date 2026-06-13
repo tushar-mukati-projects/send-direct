@@ -1,4 +1,4 @@
-import { DATA_CHANNEL_LABEL } from "@/lib/webrtc/constants";
+import { DATA_CHANNEL_LABEL, fetchIceServers, ICE_SERVERS } from "@/lib/webrtc/constants";
 import { createPeerConnection } from "@/lib/webrtc/peer";
 import { createFileReceiver } from "@/lib/webrtc/receiver";
 import { createFileSender } from "@/lib/webrtc/sender";
@@ -31,6 +31,17 @@ export const createTransferSession = (callbacks: SessionCallbacks) => {
   let closed = false;
   let finished = false;
   let connectTimer: ReturnType<typeof setTimeout> | null = null;
+  let iceServers: RTCIceServer[] = ICE_SERVERS;
+  let icePromise: Promise<void> | null = null;
+
+  const ensureIce = async (): Promise<void> => {
+    if (!icePromise) {
+      icePromise = fetchIceServers().then((servers) => {
+        iceServers = servers;
+      });
+    }
+    await icePromise;
+  };
 
   const cancelTimeout = (): void => {
     if (connectTimer) {
@@ -112,18 +123,22 @@ export const createTransferSession = (callbacks: SessionCallbacks) => {
 
   const createPc = (asReceiver = false): RTCPeerConnection => {
     pc?.close();
-    const connection = createPeerConnection({
-      onIceCandidate: (candidate) =>
-        signaling?.send({ type: "ice", candidate: candidate.toJSON() }),
-      onStateChange: (current) => onPeerState(current),
-      onDataChannel: asReceiver ? (channel) => attachReceiver(channel) : undefined,
-    });
+    const connection = createPeerConnection(
+      {
+        onIceCandidate: (candidate) =>
+          signaling?.send({ type: "ice", candidate: candidate.toJSON() }),
+        onStateChange: (current) => onPeerState(current),
+        onDataChannel: asReceiver ? (channel) => attachReceiver(channel) : undefined,
+      },
+      iceServers,
+    );
     pc = connection;
     return connection;
   };
 
   const makeOffer = async (files: SelectedFile[]): Promise<void> => {
     try {
+      await ensureIce();
       const connection = createPc();
       const channel = connection.createDataChannel(DATA_CHANNEL_LABEL, { ordered: true });
       sender = createFileSender(channel, files, {
@@ -148,6 +163,7 @@ export const createTransferSession = (callbacks: SessionCallbacks) => {
 
   const answer = async (sdp: RTCSessionDescriptionInit): Promise<void> => {
     try {
+      await ensureIce();
       const connection = pc ?? createPc(true);
       setStep(2);
       armTimeout();

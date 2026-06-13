@@ -1,13 +1,14 @@
-import { ICE_SERVERS } from "@/lib/webrtc/constants";
-
 interface PeerHandlers {
   onIceCandidate: (candidate: RTCIceCandidate) => void;
   onStateChange: (pc: RTCPeerConnection) => void;
   onDataChannel?: (channel: RTCDataChannel) => void;
 }
 
-export const createPeerConnection = (handlers: PeerHandlers): RTCPeerConnection => {
-  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+export const createPeerConnection = (
+  handlers: PeerHandlers,
+  iceServers: RTCIceServer[],
+): RTCPeerConnection => {
+  const pc = new RTCPeerConnection({ iceServers });
   pc.onicecandidate = (event) => {
     if (event.candidate) handlers.onIceCandidate(event.candidate);
   };

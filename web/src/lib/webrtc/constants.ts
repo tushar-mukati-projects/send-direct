@@ -25,6 +25,21 @@ export const BUFFER_LOW = 1 * 1024 * 1024;
 
 export const DATA_CHANNEL_LABEL = "send-direct";
 
+export const STREAM_THRESHOLD = 64 * 1024 * 1024;
+
+const httpSignalUrl = SIGNAL_URL.replace(/^ws/, "http").replace(/\/$/, "");
+
+export const fetchIceServers = async (): Promise<RTCIceServer[]> => {
+  try {
+    const response = await fetch(`${httpSignalUrl}/ice`);
+    if (!response.ok) return ICE_SERVERS;
+    const data = (await response.json()) as { iceServers?: RTCIceServer[] };
+    return data.iceServers && data.iceServers.length > 0 ? data.iceServers : ICE_SERVERS;
+  } catch {
+    return ICE_SERVERS;
+  }
+};
+
 export const linkForCode = (code: string): string => {
   const origin = (typeof window !== "undefined" ? window.location.origin : APP_ORIGIN).replace(
     /\/$/,
