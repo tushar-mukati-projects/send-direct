@@ -12,6 +12,7 @@ interface SenderCallbacks {
 
 const PROGRESS_INTERVAL_MS = 60;
 const FLUSH_TIMEOUT_MS = 15_000;
+const DRAIN_TIMEOUT_MS = 30_000;
 
 export const createFileSender = (
   channel: RTCDataChannel,
@@ -35,20 +36,28 @@ export const createFileSender = (
   };
 
   const drain = (): Promise<void> => {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       if (channel.readyState !== "open" || channel.bufferedAmount < BUFFER_HIGH) {
         resolve();
         return;
       }
-      const done = () => {
-        channel.removeEventListener("bufferedamountlow", done);
-        channel.removeEventListener("close", done);
-        channel.removeEventListener("error", done);
+      const cleanup = () => {
+        clearTimeout(timer);
+        channel.removeEventListener("bufferedamountlow", onDrain);
+        channel.removeEventListener("close", onDrain);
+        channel.removeEventListener("error", onDrain);
+      };
+      const onDrain = () => {
+        cleanup();
         resolve();
       };
-      channel.addEventListener("bufferedamountlow", done);
-      channel.addEventListener("close", done);
-      channel.addEventListener("error", done);
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error("drain timeout"));
+      }, DRAIN_TIMEOUT_MS);
+      channel.addEventListener("bufferedamountlow", onDrain);
+      channel.addEventListener("close", onDrain);
+      channel.addEventListener("error", onDrain);
     });
   };
 

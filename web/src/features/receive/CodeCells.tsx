@@ -3,7 +3,7 @@ interface CodeCellsProps {
 }
 
 export const CodeCells = ({ value }: CodeCellsProps) => (
-  <div className="grid grid-cols-6 gap-2">
+  <div aria-hidden className="grid grid-cols-6 gap-2">
     {[0, 1, 2, 3, 4, 5].map((i) => {
       const filled = i < value.length;
       const active = i === value.length;

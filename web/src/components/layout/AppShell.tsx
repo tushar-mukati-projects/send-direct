@@ -36,7 +36,7 @@ export const AppShell = ({ prefillCode }: AppShellProps) => {
   const prefilled = useRef(false);
 
   useEffect(() => {
-    if (prefillCode && !prefilled.current) {
+    if (prefillCode !== undefined && !prefilled.current) {
       prefilled.current = true;
       openReceive(prefillCode);
     }

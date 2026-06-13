@@ -6,7 +6,10 @@ interface ShareQrProps {
 }
 
 export const ShareQr = ({ code }: ShareQrProps) => (
-  <div className="flex h-[104px] w-[104px] shrink-0 items-center justify-center rounded-[10px] border border-white/10 bg-white p-2">
+  <div
+    aria-hidden
+    className="flex h-[104px] w-[104px] shrink-0 items-center justify-center rounded-[10px] border border-white/10 bg-white p-2"
+  >
     <QRCode
       value={linkForCode(code)}
       size={256}

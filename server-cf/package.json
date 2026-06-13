@@ -17,7 +17,7 @@
     "dry-run": "wrangler deploy --dry-run --outdir dist"
   },
   "dependencies": {
-    "zod": "^3.24.1"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.8.70",

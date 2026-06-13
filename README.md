@@ -77,8 +77,8 @@ send-direct/
 - **Transfer:** sender opens an ordered `RTCDataChannel`, sends a JSON manifest, waits for `accept`,
   then streams each file in 16 KiB chunks gated by `bufferedAmount` (backpressure). The receiver
   verifies each file's byte count against the manifest before declaring success.
-- **Large files:** transfers ≥ 64 MB stream to disk via the File System Access API (directory
-  picker); smaller files download as a `Blob`.
+- **Download:** the receiver verifies bytes, reassembles each file, and saves it via an object-URL
+  download.
 - **NAT traversal:** public STUN by default; TURN is optional (see below).
 - **Deep links / QR:** the share link `…/r?c=CODE` opens the receive flow with the code prefilled;
   the QR encodes that link.
@@ -150,7 +150,8 @@ Set `ALLOWED_ORIGINS` in `server-cf/wrangler.toml` to your Pages origin and rede
 
 ## Limitations
 
-- Small files reassemble in memory before download (large files stream to disk via File System
-  Access). True end-to-end flow control to disk would need a receiver→sender pacing protocol.
+- Each file reassembles in memory before download. Streaming straight to disk for very large files
+  would need a receiver→sender flow-control protocol (so disk write-speed paces the sender) —
+  deliberately left as future work rather than shipped half-done.
 - Two peers per room (1:1 transfer by design).
 - TURN is opt-in (see above).

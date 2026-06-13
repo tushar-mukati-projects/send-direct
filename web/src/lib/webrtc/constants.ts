@@ -25,8 +25,6 @@ export const BUFFER_LOW = 1 * 1024 * 1024;
 
 export const DATA_CHANNEL_LABEL = "send-direct";
 
-export const STREAM_THRESHOLD = 64 * 1024 * 1024;
-
 const httpSignalUrl = SIGNAL_URL.replace(/^ws/, "http").replace(/\/$/, "");
 
 export const fetchIceServers = async (): Promise<RTCIceServer[]> => {

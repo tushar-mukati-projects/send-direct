@@ -56,7 +56,7 @@ export class SignalRoom {
           return this.reject(socket, "room-exists", "that code is already in use");
         }
         this.setRole(socket, "host");
-        void this.state.storage.setAlarm(Date.now() + ROOM_TTL_MS);
+        this.touch();
         return this.send(socket, { type: "created", code: message.code });
       }
       case "join": {
@@ -75,6 +75,7 @@ export class SignalRoom {
       case "ice": {
         const peer = this.peerOf(socket);
         if (!peer) return this.fail(socket, "not-in-room", "no peer to relay to");
+        this.touch();
         if (message.type === "ice")
           return this.send(peer, { type: "ice", candidate: message.candidate });
         return this.send(peer, { type: message.type, sdp: message.sdp });
@@ -100,9 +101,14 @@ export class SignalRoom {
     for (const socket of this.state.getWebSockets()) socket.close(1000, "room expired");
   };
 
+  private touch = (): void => {
+    this.state.storage.setAlarm(Date.now() + ROOM_TTL_MS).catch(() => {});
+  };
+
   private roleOf = (socket: WebSocket): Role | null => {
-    const attachment = socket.deserializeAttachment() as { role: Role } | null;
-    return attachment?.role ?? null;
+    const attachment = socket.deserializeAttachment() as { role?: Role } | null;
+    const role = attachment?.role;
+    return role === "host" || role === "guest" ? role : null;
   };
 
   private setRole = (socket: WebSocket, role: Role): void => {
@@ -112,9 +118,11 @@ export class SignalRoom {
   private socketWithRole = (role: Role): WebSocket | null =>
     this.state.getWebSockets().find((socket) => this.roleOf(socket) === role) ?? null;
 
-  private peerOf = (socket: WebSocket): WebSocket | null =>
-    this.state.getWebSockets().find((other) => other !== socket && this.roleOf(other) !== null) ??
-    null;
+  private peerOf = (socket: WebSocket): WebSocket | null => {
+    const role = this.roleOf(socket);
+    if (!role) return null;
+    return this.socketWithRole(role === "host" ? "guest" : "host");
+  };
 
   private reject = (socket: WebSocket, reason: ServerErrorReason, message: string): void => {
     this.fail(socket, reason, message);

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 
 const ReceiveWithCode = () => {
-  const code = useSearchParams().get("c") ?? undefined;
+  const code = useSearchParams().get("c") ?? "";
   return <AppShell prefillCode={code} />;
 };
 

@@ -53,7 +53,7 @@ const buildIceServers = async (env: Env): Promise<IceServer[]> => {
           Authorization: `Bearer ${env.TURN_KEY_API_TOKEN}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ttl: 86400 }),
+        body: JSON.stringify({ ttl: 7200 }),
       },
     );
     if (response.ok) {
@@ -76,6 +76,9 @@ export default {
     if (url.pathname === "/ice") {
       const headers = corsHeaders(origin, env.ALLOWED_ORIGINS);
       if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+      if (!originAllowed(origin, env.ALLOWED_ORIGINS)) {
+        return new Response("origin not allowed", { status: 403, headers });
+      }
       const iceServers = await buildIceServers(env);
       return Response.json({ iceServers }, { headers });
     }

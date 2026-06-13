@@ -41,13 +41,13 @@ describe("worker HTTP routes", () => {
   });
 
   it("GET /ice returns iceServers with a STUN entry", async () => {
-    const response = await SELF.fetch("https://x/ice");
+    const response = await SELF.fetch("https://x/ice", {
+      headers: { Origin: "http://localhost:3000" },
+    });
     expect(response.status).toBe(200);
     const body = (await response.json()) as { iceServers: { urls: string | string[] }[] };
     expect(Array.isArray(body.iceServers)).toBe(true);
-    const flat = body.iceServers.flatMap((s) =>
-      Array.isArray(s.urls) ? s.urls : [s.urls],
-    );
+    const flat = body.iceServers.flatMap((s) => (Array.isArray(s.urls) ? s.urls : [s.urls]));
     expect(flat.some((u) => u.startsWith("stun:"))).toBe(true);
   });
 });

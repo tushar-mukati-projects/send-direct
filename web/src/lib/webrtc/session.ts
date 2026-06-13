@@ -30,6 +30,7 @@ export const createTransferSession = (callbacks: SessionCallbacks) => {
   let step = 0;
   let closed = false;
   let finished = false;
+  let failed = false;
   let connectTimer: ReturnType<typeof setTimeout> | null = null;
   let iceServers: RTCIceServer[] = ICE_SERVERS;
   let icePromise: Promise<void> | null = null;
@@ -57,7 +58,9 @@ export const createTransferSession = (callbacks: SessionCallbacks) => {
   };
 
   const fail = (message: string): void => {
-    if (closed || finished) return;
+    if (closed || finished || failed) return;
+    failed = true;
+    cancelTimeout();
     callbacks.onError?.(message);
   };
 

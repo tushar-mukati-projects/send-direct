@@ -82,8 +82,9 @@ across browsers.
 - Files are framed with `file-begin` / chunks / `file-end`. The receiver tracks bytes per file and
   **verifies `received === manifest size`** before marking a file complete. The overall transfer
   only reports "done" once *every* file is verified — a truncated/dropped transfer surfaces an error
-  instead of silently producing a corrupt file. (Validated end-to-end in tests with a deterministic
-  byte pattern.)
+  instead of silently producing a corrupt file. (Verified end-to-end via live two-window transfers
+  with a deterministic byte pattern; the unit + Workers-pool tests cover the helpers, schemas, and
+  signalling relay.)
 
 ## 8. NAT traversal: STUN always, TURN optional
 
@@ -127,8 +128,10 @@ across browsers.
 
 ## 12. Tradeoffs & what's next
 
-- **Receiver memory:** small files buffer in memory; large files (≥64 MB) stream to disk via the
-  File System Access API. True disk-paced flow control would need a receiver→sender pacing message.
+- **Receiver memory:** each file reassembles in memory before download. Streaming straight to disk
+  (File System Access API) only delivers bounded memory if the sender is paced by the receiver's
+  disk write speed — i.e. it needs a receiver→sender flow-control message. Rather than ship a
+  streaming path that looks bounded but isn't, that flow-control protocol is listed as future work.
 - **1:1 only:** one room = two peers. Multi-peer (mesh/SFU) would be a larger design.
 - **Next steps:** enable TURN in production, add a receiver→sender flow-control signal for huge
   files, a resumable-transfer protocol, and a browser e2e (Playwright) on top of the existing unit +
